@@ -7,13 +7,15 @@ services:
       - '8887:8080'
     environment:
       NODE_ENV: development
-      DAV_API_URL: https://api.dav.network:8888
+      DAV_API_URL: http://mission-control:8443
       CAPTAIN_PORT: 8080
       CAPTAIN_HOSTNAME: 0.0.0.0
     volumes:
       - .:/app
     networks:
       - dav
+    external_links:
+      - missioncontrol_missioncontrol_1:mission-control
 networks:
   dav:
     external: true

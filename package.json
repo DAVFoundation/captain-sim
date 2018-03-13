@@ -17,10 +17,14 @@
     "url": "https://github.com/DAVFoundation/captain-sim/issues"
   },
   "homepage": "https://github.com/DAVFoundation/captain-sim#readme",
+  "devDependencies": {
+    "dotenv": "^5.0.1"
+  },
   "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "request": "^2.83.0",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "dav.js": "^0.1.0"
   }
 }

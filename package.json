@@ -2,29 +2,29 @@
   "name": "captain-sim",
   "version": "1.0.0",
   "description": "The Captain that drives drone-delivery simulations",
-  "main": "index.js",
-  "scripts": {
-    "start": "nodemon ./src/index.js",
-    "test": ""
+  "homepage": "https://github.com/DAVFoundation/captain-sim#readme",
+  "bugs": {
+    "url": "https://github.com/DAVFoundation/captain-sim/issues"
   },
+  "license": "MIT",
+  "author": "",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DAVFoundation/captain-sim.git"
   },
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/DAVFoundation/captain-sim/issues"
-  },
-  "homepage": "https://github.com/DAVFoundation/captain-sim#readme",
-  "devDependencies": {
-    "dotenv": "^5.0.1"
+  "scripts": {
+    "start": "nodemon ./src/index.js",
+    "test": ""
   },
   "dependencies": {
     "body-parser": "^1.18.2",
+    "dav.js": "^0.1.1",
     "express": "^4.16.3",
     "request": "^2.85.0",
-    "request-promise-native": "^1.0.5",
-    "dav.js": "^0.1.1"
+    "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {
+    "dotenv": "^5.0.1"
   }
 }

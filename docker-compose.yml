@@ -7,15 +7,23 @@ services:
       - '8887:8080'
     environment:
       NODE_ENV: development
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       DAV_API_URL: http://mission-control:8443
       CAPTAIN_PORT: 8080
       CAPTAIN_HOSTNAME: 0.0.0.0
     volumes:
       - .:/app
+    links:
+      - redis:redis
     networks:
       - dav
     external_links:
       - missioncontrol_missioncontrol_1:mission-control
+  redis:
+    image: redis
+    networks:
+      - dav
 networks:
   dav:
     external: true

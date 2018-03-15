@@ -8,6 +8,7 @@ const app = express();
 const port = process.env.CAPTAIN_PORT || 8887;
 const hostname = process.env.CAPTAIN_HOSTNAME || "0.0.0.0";
 const davApiUrl = process.env.DAV_API_URL || "https://api.dav.network:8888";
+const SimulationController = require('./controllers/SimulationController');
 
 app.use(bodyParser.json());
 
@@ -20,6 +21,9 @@ app.get('/healthy', (req, res) => {
       res.status(500).send(err);
     });
 });
+
+
+app.post('/simulation/drones', SimulationController.createSimulationDrones)
 
 app.listen(port, hostname, () => {
   console.log(`Web server started. Listening on ${hostname}:${port}`);

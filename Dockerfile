@@ -11,3 +11,5 @@ RUN npm install
 COPY src/. /app/src
 
 CMD [ "npm", "start" ]
+
+EXPOSE 8080

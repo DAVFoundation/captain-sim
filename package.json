@@ -18,7 +18,11 @@
     "test": ""
   },
   "dependencies": {
+    "redis": "^2.8.0",
+    "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
+    "randomstring": "^1.1.5",
+    "@turf/turf": "^5.1.6",
     "dav.js": "^0.1.1",
     "express": "^4.16.3",
     "request": "^2.85.0",

@@ -95,4 +95,4 @@ const getVehiclesInRange = async (coords, radius) => {
 };
 
 
-module.exports = {getVehiclesInRange}
+module.exports = {getVehiclesInRange, getVehicles}

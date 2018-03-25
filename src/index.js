@@ -8,12 +8,14 @@ const davJS = require('dav.js');
 const port = process.env.CAPTAIN_PORT || 8887;
 const hostname = process.env.CAPTAIN_HOSTNAME || "0.0.0.0";
 const SimulationController = require('./controllers/SimulationController');
-const {getVehiclesInRange} = require('./store/vehicles');
+const {getVehiclesInRange, getLatestPositionUpdate, getPosition, updateVehiclePosition} = require('./store/vehicles');
 const {generateBidFromVehicle} = require('./store/bids');
+const {calculateNextCoordinate} = require('./simulation/vehicles');
 
 const dav = new davJS('CAP-SIM');
 
 const droneDelivery = dav.needs().forType('drone_delivery', {global: true});
+let previousMissionInstance;
 
 droneDelivery.subscribe(
   onNeedTypeRegistered,
@@ -63,13 +65,14 @@ async function onNeedTypeRegistered(need) {
     };
 
 
-    function beginMission(contract){
-      const mission = dav.mission().begin(contract.bid_id, {
+    function beginMission(contract) {
+      const missionSubject = dav.mission().begin(contract.bid_id, {
         id: '0x98782738712387623876',
         longitude: vehicle.coords.long,
         latitude: vehicle.coords.lat
       });
-      mission.subscribe(
+
+      missionSubject.subscribe(
         onMissionUpdated,
         err => console.log(err),
         () => console.log('Mission completed')
@@ -77,24 +80,34 @@ async function onNeedTypeRegistered(need) {
     };
 
 
-    function onMissionUpdated(mission){
-      console.log(mission);
-
-      // TODO: vehicle movement simulation
-      // mission.update({
-      //   status: 'movingToPickup',
-      //   longitude: 3.385048,
-      //   latitude: 6.497742
-      // });
+    async function onMissionUpdated(currentMissionInstance) {
+      const statusWordArray = currentMissionInstance.status.match(/[A-Z][a-z]+/g);
+      const leg = statusWordArray[statusWordArray.length - 1].toLowerCase();
+      const latestPositionUpdate = await getLatestPositionUpdate(vehicle);
+      const positionLastUpdatedAt = latestPositionUpdate[1];
+      const previousPosition = await getPosition(latestPositionUpdate[0]);
+      const newCoords = await calculateNextCoordinate(currentMissionInstance.vehicle, currentMissionInstance, leg, positionLastUpdatedAt, previousPosition)
+      if (!(isNaN(newCoords.long) || isNaN(newCoords.lat))) {
+        await updateVehiclePosition(vehicle, newCoords.long, newCoords.lat);
+      }
+      let newStatus = currentMissionInstance.status;
+      if ((currentMissionInstance.vehicle.coords.long === previousMissionInstance.vehicle.coords.long) && (currentMissionInstance.vehicle.coords.lat === previousMissionInstance.vehicle.coords.lat)) {
+        newStatus = `at${capitalizeFirstLetter(leg)}`;
+      }
+      currentMissionInstance.update({
+        status: newStatus,
+        longitude: newCoords.long,
+        latitude: newCoords.lat
+      });
+      previousMissionInstance = currentMissionInstance;
     }
   });
 }
 
 
-
-
-
-
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 app.use(bodyParser.json());
 

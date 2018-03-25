@@ -38,6 +38,16 @@ const updateVehiclePosition = async (vehicle, newLong = vehicle.coords.long, new
 
 };
 
+const getPosition = async positionId => {
+  const position = await redis.hgetallAsync(`vehicle_position_history:${positionId}`);
+  position.position_id = positionId;
+  return position;
+};
+
+const getLatestPositionUpdate = async (vehicle) => {
+  return await redis.zrevrangeAsync(`vehicles:${vehicle.id}:positions`, 0, -1, 'withscores');
+};
+
 
 const addNewVehicle = vehicle => {
   // Add to vehicles
@@ -95,4 +105,4 @@ const getVehiclesInRange = async (coords, radius) => {
 };
 
 
-module.exports = {getVehiclesInRange, getVehicles}
+module.exports = {getVehiclesInRange, getLatestPositionUpdate, getPosition, updateVehiclePosition}

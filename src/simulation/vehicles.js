@@ -27,7 +27,7 @@ const randomBid = (origin, pickup, dropoff) => {
 };
 
 const calculateNextCoordinate = async (vehicle, mission, leg, positionLastUpdatedAt, previousPosition) => {
-  const legStartTime = leg === 'pickup' ? mission.vehicle_signed_at : mission.travelling_dropoff_at;
+  const legStartTime = leg === 'pickup' ? mission.started_at : mission.movingToDropoffAt;
   let legCompletionTime = parseFloat(legStartTime) + parseFloat(mission['time_to_' + leg]);
 
   const destinationLong = mission[leg + '_longitude'];

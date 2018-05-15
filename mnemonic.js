@@ -1,0 +1,1 @@
+module.exports = 'this is dummy seed phrase for the local testnet';

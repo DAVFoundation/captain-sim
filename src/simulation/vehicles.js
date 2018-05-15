@@ -9,6 +9,8 @@ const generateRandomVehicles = (vehicleCount = 4, coords, radius = 2000) => {
   return vehicles;
 };
 
+
+
 const randomBid = (origin, pickup, dropoff) => {
   const originPoint = turf.point([parseFloat(origin.long), parseFloat(origin.lat)]);
   const pickupPoint = turf.point([parseFloat(pickup.long), parseFloat(pickup.lat)]);
@@ -46,16 +48,16 @@ const calculateNextCoordinate = async (vehicle, mission, leg, positionLastUpdate
   let lat = (destinationLat - (timeLeftAtNewPosition * speedLat)).toFixed(6);
 
   switch(leg){
-  case 'pickup':{
-    long = dontMoveAtDestination(destinationLong, mission.vehicle_start_longitude, long);
-    lat = dontMoveAtDestination(destinationLat, mission.vehicle_start_latitude, lat);
-    break;
-  }
-  case 'dropoff':{
-    long = dontMoveAtDestination(destinationLong, mission.pickup_longitude, long);
-    lat = dontMoveAtDestination(destinationLat, mission.pickup_latitude, lat);
-    break;
-  }
+    case 'pickup':{
+      long = dontMoveAtDestination(destinationLong, mission.vehicle_start_longitude, long);
+      lat = dontMoveAtDestination(destinationLat, mission.vehicle_start_latitude, lat);
+      break;
+    }
+    case 'dropoff':{
+      long = dontMoveAtDestination(destinationLong, mission.pickup_longitude, long);
+      lat = dontMoveAtDestination(destinationLat, mission.pickup_latitude, lat);
+      break;
+    }
   }
 
   return {long, lat};
@@ -69,8 +71,29 @@ const dontMoveAtDestination = (destination, startingCoordinate, nextCoordinate) 
   }
 };
 
+const vehicles=[];
+
+function addVehicles(newVehicles)
+{
+  vehicles.splice(0,0,...newVehicles);
+}
+
+function getVehicles(count,coord,radius)
+{
+  const pt1=turf.point([coord.long,coord.lat]);
+  let vehiclesInRange=vehicles.filter(vehicle=>{
+    const pt2=turf.point([vehicle.coords.long,vehicle.coords.lat]);
+    const dist = turf.distance(pt1, pt2,{units:'meters'});
+    return dist<=radius;
+  });
+
+  return vehiclesInRange;
+}
+
 module.exports = {
   generateRandomVehicles,
   calculateNextCoordinate,
   randomBid,
+  getVehicles,
+  addVehicles
 };

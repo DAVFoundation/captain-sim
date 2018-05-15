@@ -1,4 +1,4 @@
-const redis = require('./redis');
+/* const redis = require('./redis');
 const config = require('../config');
 const {generateRandomVehicles} = require('../simulation/vehicles');
 
@@ -85,17 +85,7 @@ const setVehicleTTL = vehicleId =>
 
 
 const getVehiclesInRange = async (coords, radius) => {
-  const shortRangeRadius = radius / 7;
-  const desiredVehicleCountInShortRange = 3;
   const desiredVehicleCountInLongRange = 100;
-
-  // get list of known vehicles in short range
-  const vehiclesInShortRange = await redis.georadiusAsync('vehicle_positions', coords.long, coords.lat, shortRangeRadius, 'm');
-  // if not enough vehicles in short range generate new ones
-  generateAndAddVehicles(desiredVehicleCountInShortRange - vehiclesInShortRange.length, coords, shortRangeRadius);
-
-  // get list of known vehicles in long range
-  const vehiclesInLongRange = await redis.georadiusAsync('vehicle_positions', coords.long, coords.lat, radius, 'm');
 
   // if not enough vehicles in long range generate new ones
   generateAndAddVehicles(desiredVehicleCountInLongRange - vehiclesInLongRange.length, coords, radius);
@@ -106,3 +96,4 @@ const getVehiclesInRange = async (coords, radius) => {
 
 
 module.exports = {getVehiclesInRange, getLatestPositionUpdate, getPosition, updateVehiclePosition}
+ */

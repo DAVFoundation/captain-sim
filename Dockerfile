@@ -1,14 +1,13 @@
-FROM node:9.3.0-alpine
+FROM node:9.3.0
 
 RUN npm install -g nodemon
 
-COPY package.json /app/
-
 WORKDIR /app
 
+COPY package.json /app/
 RUN npm install
 
-COPY src/. /app/src
+COPY . /app
 
 CMD [ "npm", "start" ]
 

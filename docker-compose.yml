@@ -3,27 +3,24 @@ version: '3'
 services:
   captain-sim:
     build: .
+    command: 'nodemon --inspect=0.0.0.0:9229 src/index.js'
     ports:
       - '8887:8080'
+      - '9228:9229'
     environment:
       NODE_ENV: development
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      DAV_API_URL: http://mission-control:8443
       CAPTAIN_PORT: 8080
       CAPTAIN_HOSTNAME: 0.0.0.0
+      ETH_NODE_URL: http://dav-contracts:8545
+      MISSION_CONTROL_URL: http://mission-control:8443
     volumes:
-      - .:/app
-    links:
-      - redis:redis
+      - /app/node_modules
+      - ./src:/app/src
     networks:
       - dav
     external_links:
       - missioncontrol_missioncontrol_1:mission-control
-  redis:
-    image: redis
-    networks:
-      - dav
+      - dav-contracts:dav-contracts
 networks:
   dav:
     external: true

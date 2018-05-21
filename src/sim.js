@@ -19,8 +19,9 @@ const {
 const port = process.env.CAPTAIN_PORT || 8887;
 const hostname = process.env.CAPTAIN_HOSTNAME || '0.0.0.0';
 
-const dav = new DavSDK('123456789', '123456789', mnemonic);
-dav.initCaptain(generateRandom({coords: { lat: 0, long: 0 }, radius:1000}));
+const captain=generateRandom({coords: { lat: 0, long: 0 }, radius:1000});
+const dav = new DavSDK(captain.id, captain.id, mnemonic);
+dav.initCaptain(captain);
 
 const droneDelivery = dav.needs().forType('drone_delivery', {
   global: true,

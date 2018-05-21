@@ -1,17 +1,8 @@
 #!/bin/bash
 
-echo copying dav-js...
-cp -R /build/dav-js/. ./build/dav-js
-
-echo installing dav-js...
-cd ./build/dav-js && rm -rf node_modules && npm i
-
-echo installing dependencies...
-cd ../../
-rm -rf node_modules
+cp -R /build/dav-js/src/. /app/node_modules/dav-js/src
+cp /build/dav-js/package.json ./node_modules/dav-js
+cd ./node_modules/dav-js
 npm i
-
-echo linking dav-js...
-npm link ./build/dav-js
-
+cd ../..
 nodemon --inspect=0.0.0.0:9229 src/index.js

@@ -24,7 +24,7 @@ dav.initCaptain(generateRandom({coords: { lat: 0, long: 0 }, radius:1000}));
 
 const droneDelivery = dav.needs().forType('drone_delivery', {
   global: true,
-  ttl: 1200
+  ttl: 120
 });
 
 droneDelivery.subscribe(

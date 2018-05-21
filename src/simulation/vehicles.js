@@ -85,7 +85,7 @@ function getVehicles(count,coord,radius)
     const pt2=turf.point([vehicle.coords.long,vehicle.coords.lat]);
     const dist = turf.distance(pt1, pt2,{units:'meters'});
     return dist<=radius;
-  });
+  }).slice(0,count);
 
   return vehiclesInRange;
 }

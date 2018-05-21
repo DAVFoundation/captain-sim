@@ -3,7 +3,7 @@ version: '3'
 services:
   captain-sim:
     build: .
-    command: 'nodemon --inspect=0.0.0.0:9229 src/index.js'
+    command: 'bash -c ./dev-run.sh'
     ports:
       - '8887:8080'
       - '9228:9229'
@@ -14,8 +14,8 @@ services:
       ETH_NODE_URL: http://dav-contracts:8545
       MISSION_CONTROL_URL: http://mission-control:8443
     volumes:
-      - /app/node_modules
       - ./src:/app/src
+      - ./build:/build
     networks:
       - dav
     external_links:

@@ -1,4 +1,6 @@
-FROM node:9.3.0
+FROM node:9
+
+RUN apt update && apt full-upgrade -yy
 
 RUN npm install -g nodemon
 

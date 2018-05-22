@@ -13,6 +13,7 @@ services:
       CAPTAIN_HOSTNAME: 0.0.0.0
       ETH_NODE_URL: http://dav-contracts:8545
       MISSION_CONTROL_URL: http://mission-control:8443
+      BLOCKCHAIN_TYPE: NONE
     volumes:
       - ./src:/app/src
       - ./build:/build

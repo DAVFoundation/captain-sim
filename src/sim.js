@@ -1,5 +1,6 @@
 if (process.env.NODE_ENV === 'development') require('dotenv').config();
 
+const Rx = require('rxjs/Rx');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mnemonic = require('../mnemonic');
@@ -11,21 +12,29 @@ const {
   randomBid,
   addVehicles
 } = require('./simulation/vehicles');
-const { generateRandom } = require('./simulation/drone');
+const {
+  generateRandom
+} = require('./simulation/drone');
 const app = express();
 const {
-  DavSDK
+  DavSDK,
+  API
 } = require('dav-js');
 
 const port = process.env.CAPTAIN_PORT || 8887;
 const hostname = process.env.CAPTAIN_HOSTNAME || '0.0.0.0';
 
-setTimeout(init,5000);
-// init().catch(err=>{console.log(err);});
+// setTimeout(init, 5000);
+init().catch(err=>{console.log(err);});
 
-async function init()
-{
-  const captain=generateRandom({coords: { lat: 0, long: 0 }, radius:1000});
+async function init() {
+  const captain = generateRandom({
+    coords: {
+      lat: 0,
+      long: 0
+    },
+    radius: 1000
+  });
   // captain.id=registerNew();
   const dav = new DavSDK(captain.id, captain.id, mnemonic);
   dav.initCaptain(captain);
@@ -41,6 +50,162 @@ async function init()
     () => console.log('completed')
   );
 
+  let missionContract = dav.mission().contract();
+  missionContract.subscribe(
+    mission => onContractUpdated(mission),
+    err => console.log(err),
+    () => console.log(''));
+
+  function onContractUpdated(mission) {
+    beginMission(mission.captain_id, mission.mission_id);
+  }
+
+  async function beginMission(vehicleId, missionId) {
+    const missionUpdates = Rx.Observable.timer(0, 1000)
+      .mergeMap(async () => {
+        let mission = await API.missions.getMission(missionId);
+        let vehicle = await API.captains.getCaptain(mission.captain_id);
+        return {
+          mission,
+          vehicle
+        };
+      })
+      .distinctUntilChanged(
+        (state1, state2) =>
+          state1.mission.status === state2.mission.status && state1.vehicle.status === state2.vehicle.status)
+      .subscribe(
+        async (state) => {
+          try {
+            switch (state.mission.status) {
+              case 'awaiting_signatures':
+                break;
+              case 'in_progress':
+                await onInProgress(
+                  state.mission,
+                  state.vehicle,
+                );
+                break;
+              case 'in_mission':
+                await onInMission(
+                  state.mission,
+                  state.vehicle,
+                );
+                break;
+              case 'confirmed':
+                setTimeout(async () => {
+                  await updateStatus(state.mission, 'completed', 'available');
+                }, 3000);
+                await API.missions.updateMission(state.mission.mission_id, {
+                  status: 'completed',
+                  captain_id: state.vehicle.id
+                });
+                break;
+              case 'completed':
+                missionUpdates.unsubscribe();
+                break;
+              default:
+                console.log(`bad mission.status ${state.mission}`);
+                break;
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        },
+        error => {
+          console.error(error);
+        }
+      );
+  }
+  async function onInProgress(mission, vehicle) {
+    await updateStatus(mission, 'vehicle_signed', 'contract_received');
+    await API.missions.updateMission(mission.mission_id, {
+      status: 'in_mission',
+      // longitude: droneState.location.lon,
+      // latitude: droneState.location.lat,
+      captain_id: vehicle.id
+    });
+
+    await onInMission(mission, vehicle);
+  }
+  async function updateStatus(mission, missionStatus, vehicleStatus) {
+    await API.missions.updateMission(mission.mission_id, {
+      mission_status: missionStatus,
+      vehicle_status: vehicleStatus,
+      captain_id: mission.captain_id
+    });
+  }
+
+  async function onInMission(mission, vehicle) {
+    switch (vehicle.status) {
+      case 'contract_received':
+        setTimeout(async () => {
+          await updateStatus(mission, 'takeoff_start', 'takeoff_start');
+        }, 3000);
+        break;
+      case 'takeoff_start':
+        setTimeout(async () => {
+          await updateStatus(mission, 'travelling_pickup', 'travelling_pickup');
+        }, 3000);
+        break;
+      case 'travelling_pickup':
+        setTimeout(async () => {
+          await updateStatus(mission, 'landing_pickup', 'landing_pickup');
+        }, 3000);
+        break;
+      case 'landing_pickup':
+        setTimeout(async () => {
+          await updateStatus(mission, 'waiting_pickup', 'waiting_pickup');
+        }, 3000);
+        break;
+      case 'waiting_pickup':
+        console.log(`drone waiting for pickup`);
+        break;
+      case 'takeoff_pickup':
+        await updateStatus(
+          mission,
+          'takeoff_pickup_wait',
+          'takeoff_pickup_wait'
+        );
+        break;
+      case 'takeoff_pickup_wait':
+        setTimeout(async () => {
+          await updateStatus( mission, 'travelling_dropoff', 'travelling_dropoff' );
+        }, 3000);
+        break;
+      case 'travelling_dropoff':
+        setTimeout(async () => {
+          await updateStatus( mission, 'landing_dropoff', 'landing_dropoff' );
+        }, 3000);
+        break;
+      case 'landing_dropoff':
+        setTimeout(async () => {
+          await updateStatus(
+            mission,
+            'waiting_dropoff',
+            'waiting_dropoff'
+          );
+        }, 3000);
+        break;
+      case 'waiting_dropoff':
+        setTimeout(async () => {
+          await updateStatus( mission, 'ready', 'ready' );
+        }, 3000);
+        break;
+      case 'ready':
+
+        break;
+      case 'available':
+        await API.missions.updateMission(mission.mission_id, {
+          status: 'completed',
+          captain_id: vehicle.id
+        });
+        break;
+      default:
+        console.log(`bad vehicle.status ${vehicle}`);
+        break;
+    }
+  }
+
   const generateBidFromVehicle = async (vehicle, pickup, dropoff /* , needId */ ) => {
     const origin = {
       lat: vehicle.coords.lat,
@@ -48,11 +213,8 @@ async function init()
     };
     let newBid = randomBid(origin, pickup, dropoff);
     newBid.captain_id = vehicle.id;
-    // const newBidId = await saveBid(newBid, needId);
-    // newBid.id = newBidId;
     return newBid;
   };
-
 
   async function onNeed(need) {
     const pickup = {
@@ -68,64 +230,28 @@ async function init()
 
     vehiclesToBid.forEach(async (vehicle) => {
       const generatedBid = await generateBidFromVehicle(vehicle, pickup, dropoff, need.id);
-      const bid = await dav.bid().forNeed(need.id, generatedBid);
+      /* const bid =  */
+      await dav.bid().forNeed(need.id, generatedBid);
 
-      bid.subscribe(
-        onBidUpdated,
-        err => console.log(err),
-        () => console.log('Bid completed')
-      );
-
-      function onBidUpdated(bid) {
-        if (bid.status === 'awarded') {
-          const contract = dav.contract().forBid(bid.id, {
-            id: '0x98782738712387623876',
-            ttl: 240
-          });
-          contract.subscribe(
-            onContractUpdated,
-            err => console.log(err),
-            () => console.log('Contract completed')
-          );
-        }
-      }
-
-
-      function onContractUpdated(contract) {
-        switch (contract.status) {
-          case 'signed':
-            beginMission(contract);
-            break;
-          case 'fullfilled':
-            console.log('We got some money! Hurray!');
-            break;
-        }
-      }
-
-
-      function beginMission(contract) {
-        const missionSubject = dav.mission().begin(contract.bid_id, {
-          id: '0x98782738712387623876',
-          longitude: vehicle.coords.long,
-          latitude: vehicle.coords.lat
-        });
-
-        missionSubject.subscribe(
-          onMissionUpdated,
+      /*  bid.subscribe(
+          onBidUpdated,
           err => console.log(err),
-          () => console.log('Mission completed')
+          () => console.log('Bid completed')
         );
-      }
 
-
-      async function onMissionUpdated(currentMissionInstance) {
-        currentMissionInstance.update({
-          status: '',
-          longitude: 1,
-          latitude: 1
-        });
-      // previousMissionInstance = currentMissionInstance;
-      }
+        function onBidUpdated(bid) {
+          if (bid.status === 'awarded') {
+            const contract = dav.contract().forBid(bid.id, {
+              id: '0x98782738712387623876',
+              ttl: 240
+            });
+            contract.subscribe(
+              onContractUpdated,
+              err => console.log(err),
+              () => console.log('Contract completed')
+            );
+          }
+        } */
     });
   }
 

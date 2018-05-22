@@ -25,7 +25,9 @@ const port = process.env.CAPTAIN_PORT || 8887;
 const hostname = process.env.CAPTAIN_HOSTNAME || '0.0.0.0';
 
 // setTimeout(init, 5000);
-init().catch(err=>{console.log(err);});
+init().catch(err => {
+  console.log(err);
+});
 
 async function init() {
   const captain = generateRandom({
@@ -135,27 +137,58 @@ async function init() {
     });
   }
 
+  async function moveDrone(srcLat, srcLon, targetLat, targetLon, vehicle, stepProgress, totalProgress, mission, missionStatus, vehicleStatus) {
+    Rx.Observable.interval(stepProgress)
+      .map(count => count * stepProgress)
+      .takeWhile(count => count < totalProgress)
+      .map(count => count * 1.0 / totalProgress)
+      .mergeMap(async progress => {
+        const totalLat = targetLat - srcLat;
+        const totalLon = targetLon - srcLon;
+        const lat = srcLat + totalLat * progress;
+        const lon = srcLon + totalLon * progress;
+        vehicle.coords = {
+          long: lon,
+          lat: lat
+        };
+        vehicle.ttt={lat,lon};
+        return vehicle;
+      })
+      .subscribe(async vehicle => {
+        await API.captains.updateCaptain(vehicle);
+      },
+      err => {
+        console.log(err);
+      },
+      async () => {
+        await updateStatus(mission, missionStatus, vehicleStatus);
+      });
+  }
+
   async function onInMission(mission, vehicle) {
     switch (vehicle.status) {
       case 'contract_received':
         setTimeout(async () => {
           await updateStatus(mission, 'takeoff_start', 'takeoff_start');
-        }, 3000);
+        }, 100);
         break;
       case 'takeoff_start':
         setTimeout(async () => {
           await updateStatus(mission, 'travelling_pickup', 'travelling_pickup');
-        }, 3000);
+        }, 100);
         break;
       case 'travelling_pickup':
-        setTimeout(async () => {
-          await updateStatus(mission, 'landing_pickup', 'landing_pickup');
-        }, 3000);
+        moveDrone(
+          vehicle.coords.lat,
+          vehicle.coords.long,
+          parseFloat(mission.pickup_latitude),
+          parseFloat(mission.pickup_longitude),
+          vehicle,100,mission.time_to_pickup,mission,'landing_pickup', 'landing_pickup');
         break;
       case 'landing_pickup':
         setTimeout(async () => {
           await updateStatus(mission, 'waiting_pickup', 'waiting_pickup');
-        }, 3000);
+        }, 100);
         break;
       case 'waiting_pickup':
         console.log(`drone waiting for pickup`);
@@ -169,13 +202,16 @@ async function init() {
         break;
       case 'takeoff_pickup_wait':
         setTimeout(async () => {
-          await updateStatus( mission, 'travelling_dropoff', 'travelling_dropoff' );
-        }, 3000);
+          await updateStatus(mission, 'travelling_dropoff', 'travelling_dropoff');
+        }, 100);
         break;
       case 'travelling_dropoff':
-        setTimeout(async () => {
-          await updateStatus( mission, 'landing_dropoff', 'landing_dropoff' );
-        }, 3000);
+        moveDrone(
+          parseFloat(mission.pickup_latitude),
+          parseFloat(mission.pickup_longitude),
+          parseFloat(mission.dropoff_latitude),
+          parseFloat(mission.dropoff_longitude),
+          vehicle,100,mission.time_to_dropoff,mission,'landing_dropoff', 'landing_dropoff');
         break;
       case 'landing_dropoff':
         setTimeout(async () => {
@@ -184,15 +220,14 @@ async function init() {
             'waiting_dropoff',
             'waiting_dropoff'
           );
-        }, 3000);
+        }, 100);
         break;
       case 'waiting_dropoff':
         setTimeout(async () => {
-          await updateStatus( mission, 'ready', 'ready' );
-        }, 3000);
+          await updateStatus(mission, 'ready', 'ready');
+        }, 100);
         break;
       case 'ready':
-
         break;
       case 'available':
         await API.missions.updateMission(mission.mission_id, {
@@ -286,7 +321,7 @@ async function init() {
     coords.lat = req.body.latitude;
     coords.long = req.body.longitude;
 
-    const count = 100;
+    const count = 10;
     const radius = 7000;
     const vehiclesInRange = findVehicles(count, coords, radius);
 

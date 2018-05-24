@@ -14,7 +14,7 @@ create-aws-stg-env:
 	@eb create captain-sim-stg --cname captain-sim-stg -k captain-sim-key
 
 deploy-aws-stg-env:
-	@eb deploy --profile eb-cli-dav --staged
+	@eb deploy --staged
 
 down:
 	@docker-compose down

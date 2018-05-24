@@ -1,6 +1,10 @@
 branch-defaults:
   master:
     environment: captain-sim-stg
+environment-defaults:
+  captain-sim-stg:
+    branch: null
+    repository: null
 global:
   application_name: captain-sim
   branch: null
@@ -11,7 +15,7 @@ global:
   instance_profile: null
   platform_name: null
   platform_version: null
-  profile: eb-cli-dav
+  profile: null
   repository: null
   sc: git
   workspace_type: Application

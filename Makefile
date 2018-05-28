@@ -1,6 +1,6 @@
 build:
 	@rsync -a ../dav-js build
-	@rsync -a ../dav-js node_modules
+	@rm -rf ../dav-js/node_module
 	@docker-compose build
 
 up: build

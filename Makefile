@@ -3,7 +3,7 @@ FORCE:
 build: FORCE
 	@rsync -a ../dav-js build
 	@rm -rf ../dav-js/node_module
-	@docker-compose build
+	@docker-compose build --no-cache
 
 up: build
 	@docker-compose up

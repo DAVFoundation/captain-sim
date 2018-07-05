@@ -17,8 +17,7 @@ const {
 } = require('./simulation/drone');
 const app = express();
 const {
-  DavSDK,
-  API
+  DavSDK
 } = require('dav-js');
 
 const port = process.env.CAPTAIN_PORT || 8887;
@@ -65,8 +64,8 @@ async function init() {
   async function beginMission(vehicleId, missionId) {
     const missionUpdates = Rx.Observable.timer(0, 1000)
       .mergeMap(async () => {
-        let mission = await API.missions.getMission(missionId);
-        let vehicle = await API.captains.getCaptain(mission.captain_id);
+        let mission = await dav.getMission(missionId);
+        let vehicle = await dav.getCaptain(mission.captain_id);
         return {
           mission,
           vehicle
@@ -97,7 +96,7 @@ async function init() {
                 setTimeout(async () => {
                   await updateStatus(state.mission, 'completed', 'available');
                 }, 3000);
-                await API.missions.updateMission(state.mission.mission_id, {
+                await dav.updateMission(state.mission.mission_id, {
                   status: 'completed',
                   captain_id: state.vehicle.id
                 });
@@ -120,7 +119,7 @@ async function init() {
   }
   async function onInProgress(mission, vehicle) {
     await updateStatus(mission, 'vehicle_signed', 'contract_received');
-    await API.missions.updateMission(mission.mission_id, {
+    await dav.updateMission(mission.mission_id, {
       status: 'in_mission',
       // longitude: droneState.location.lon,
       // latitude: droneState.location.lat,
@@ -130,7 +129,7 @@ async function init() {
     await onInMission(mission, vehicle);
   }
   async function updateStatus(mission, missionStatus, vehicleStatus) {
-    await API.missions.updateMission(mission.mission_id, {
+    await dav.updateMission(mission.mission_id, {
       mission_status: missionStatus,
       vehicle_status: vehicleStatus,
       captain_id: mission.captain_id
@@ -155,7 +154,7 @@ async function init() {
         return vehicle;
       })
       .subscribe(async vehicle => {
-        await API.captains.updateCaptain(vehicle);
+        await dav.updateCaptain(vehicle);
       },
       err => {
         console.log(err);
@@ -230,7 +229,7 @@ async function init() {
       case 'ready':
         break;
       case 'available':
-        await API.missions.updateMission(mission.mission_id, {
+        await dav.updateMission(mission.mission_id, {
           status: 'completed',
           captain_id: vehicle.id
         });

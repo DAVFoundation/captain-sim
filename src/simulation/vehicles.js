@@ -17,7 +17,7 @@ const randomBid = (origin, pickup, dropoff) => {
   const dropoffPoint = turf.point([parseFloat(dropoff.long), parseFloat(dropoff.lat)]);
   const distanceOriginToPickup = turf.distance(originPoint, pickupPoint);
   const distancePickupToDelivery = turf.distance(pickupPoint, dropoffPoint);
-  const price = (parseFloat(distanceOriginToPickup + distancePickupToDelivery) * 1000000000000000000).toString();
+  const price = (parseFloat(distanceOriginToPickup + distancePickupToDelivery) * 100000000000000).toString();
   return {
     price: price,
     price_type: 'flat',

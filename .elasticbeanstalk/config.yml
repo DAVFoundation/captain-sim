@@ -1,6 +1,8 @@
 branch-defaults:
   master:
     environment: captain-sim-stg
+  FEAT-DAV-TOKENS: 
+    environment: captain-sim-stg
 environment-defaults:
   captain-sim-stg:
     branch: null

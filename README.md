@@ -1,6 +1,6 @@
 # Simulation Captain
 [![Gitter](https://img.shields.io/gitter/room/DAVFoundation/DAV-Contributors.svg?style=flat-square)](https://gitter.im/DAVFoundation/DAV-Contributors)
-[![license](https://img.shields.io/github/license/DAVFoundation/captain.svg?style=flat-square)](https://github.com/DAVFoundation/captain/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/DAVFoundation/captain-sim.svg?style=flat-square)](https://github.com/DAVFoundation/captain-sim/blob/master/LICENSE)
 <img src="./resources/images/logo-captain.jpg" align="right" />
 
 The Simulation Captain is the logic that simulates vehicles, commands to the vehicle, missions negotiation , and communication with the blockchain.
